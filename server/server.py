@@ -1,4 +1,4 @@
-import queue
+import queue, re
 import socket, select, time
 from oscrypto import asymmetric
 import os, binascii
@@ -29,6 +29,15 @@ class CryptServer:
         self.now = time.time()
         self.message_queue = queue.Queue()
         self.running = False
+
+    def command_setNick(self, user, commandArgs):
+        oldname = user.username
+        user.username = commandArgs[1]
+        self.all_but(user, oldname + " is now known as " + user.username)
+        return "Your Nickname is now " + user.username
+
+    def command_who(self,user,commandArgs):
+        return "Connected:" + ','.join(map(str, self.users.values()))
 
     def encrypt(self, user, message):
         return asymmetric.rsa_pkcs1v15_encrypt(user.public_key, message)
@@ -79,14 +88,24 @@ class CryptServer:
                             rand = binascii.b2a_hex(os.urandom(3))
                             user = User("usr_" + rand.decode("ascii"), readableSocket, clientPubKey)
                             self.all_but(user, user.username + " has joined.")
-                            self.sendTo(user, "Connected:   " +  ','.join(map(str,self.users.values())))
                             self.users[str(readableSocket.getpeername()[1])] = user
                             self.waitingPublicKey.remove(readableSocket)
                         else:
                             data = self.getMessage(data)
                             user = self.users[str(readableSocket.getpeername()[1])]
-                            msg = "[" + user.username + "]" + data
-                            self.all_but(user, msg)
+                            isCommand = data.startswith("/")
+                            if isCommand:
+                                if data.startswith("/nick"):
+                                    args = data.split(" ")
+                                    result = self.command_setNick(user, args)
+                                    self.sendTo(user, result)
+                                if data.startswith("/who"):
+                                    args = data.split(" ")
+                                    result = self.command_who(user, args)
+                                    self.sendTo(user, result)
+                            else:
+                                msg = "[" + user.username + "]" + data
+                                self.all_but(user, msg)
                     else:
                         user = self.users[str(readableSocket.getpeername()[1])]
                         del self.users[str(readableSocket.getpeername()[1])]
