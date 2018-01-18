@@ -1,4 +1,6 @@
 import socket, queue, threading, sys, select
+
+import time
 from oscrypto import asymmetric
 import os
 
@@ -13,6 +15,7 @@ class CrPytClient:
         self.running = False
         self.pair = asymmetric.generate_pair("rsa", 2048)
         self.server_public_key = None
+        self.firstRun = True
 
     def command_setNick(self, user, commandArgs):
         user.username = commandArgs[1]
@@ -40,6 +43,7 @@ class CrPytClient:
     def receive(self, message):
         return self.decode(self.decrypt(message))
 
+
     def run(self):
         os.system('cls')
         self.running = True
@@ -48,9 +52,9 @@ class CrPytClient:
         t = threading.Thread(target=self.handleInput)
         t.daemon = True
         t.start()
-        self.message_queue.put("/who")
         #
         while self.running:
+            time.sleep(0.01)
             read, write, error = select.select([self.socket], [], [], 0)
             for socket in read:
                 if socket is self.socket:
@@ -71,6 +75,11 @@ class CrPytClient:
                     sys.exit()
                 else:
                     self.send(msg)
+            if self.firstRun:
+                self.firstRun = False
+                time.sleep(0.2)
+                self.send("/who")
+    #        time.sleep(0.01)
 
 
 host = input("Server IP:")

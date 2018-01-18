@@ -69,6 +69,7 @@ class CryptServer:
     def run(self):
         self.running = True
         while self.running:
+            time.sleep(0.01)
             readable, writable, exceptions = select.select(self.socks, [], [], 0)
             for readableSocket in readable:
                 if readableSocket == self.server:
@@ -95,13 +96,17 @@ class CryptServer:
                             user = self.users[str(readableSocket.getpeername()[1])]
                             isCommand = data.startswith("/")
                             if isCommand:
+                                result = ""
+                                args = data.split(" ")
                                 if data.startswith("/nick"):
-                                    args = data.split(" ")
                                     result = self.command_setNick(user, args)
-                                    self.sendTo(user, result)
-                                if data.startswith("/who"):
+                                elif data.startswith("/who"):
                                     args = data.split(" ")
                                     result = self.command_who(user, args)
+                                else:
+                                    result = "Unknown command."
+
+                                if result != "":
                                     self.sendTo(user, result)
                             else:
                                 msg = "[" + user.username + "]" + data
@@ -112,6 +117,7 @@ class CryptServer:
                         readableSocket.close()
                         self.socks.remove(readableSocket)
                         self.all_but(readableSocket, user.username + " disconnected.")
+
 
 
 CryptServer().run()
