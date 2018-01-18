@@ -25,7 +25,11 @@ Data sent to and from the server should be encoded with UTF8. Data sent to the s
 1. Client connects to IP:2705
 2. Server accepts the connection
 3. Server sends the client it's public key. 
-4. Client sends server it's public key 
+4. Client sends server it's public key  
 5. Connection is now ready for messages
 	* Data sent to the server is broadcast to all other clients, unless the message begins with a /
 	* Client automatically sends a /who command upon connection
+	
+###### Dependencies:
+ 1. [oscrypto](https://pypi.python.org/pypi/oscrypto)
+ 
