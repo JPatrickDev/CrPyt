@@ -101,7 +101,6 @@ class CryptServer:
                                 if data.startswith("/nick"):
                                     result = self.command_setNick(user, args)
                                 elif data.startswith("/who"):
-                                    args = data.split(" ")
                                     result = self.command_who(user, args)
                                 else:
                                     result = "Unknown command."
